@@ -1,8 +1,13 @@
 package Controller;
 
+import Model.Account;
+import Model.Message;
+import Service.AccountService;
+import Service.MessageService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
+import java.util.List;
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
  * found in readme.md as well as the test cases. You should
@@ -16,17 +21,118 @@ public class SocialMediaController {
      */
     public Javalin startAPI() {
         Javalin app = Javalin.create();
-        app.get("example-endpoint", this::exampleHandler);
+        // User-related endpoints
+        app.post("/register", this::registerHandler);
+        app.post("/login", this::loginHandler);
+
+        // Message-related endpoints
+        app.post("/messages", this::createMessageHandler);
+        app.get("/messages", this::getAllMessagesHandler);
+        app.get("/messages/{id}", this::getMessageByIdHandler);
+        app.patch("/messages/{id}", this::updateMessageHandler);
+        app.delete("/messages/{id}", this::deleteMessageHandler);
+        app.get("/accounts/{id}/messages", this::getMessagesForUserHandler);
 
         return app;
     }
 
-    /**
-     * This is an example handler for an example endpoint.
-     * @param context The Javalin Context object manages information about both the HTTP request and response.
-     */
-    private void exampleHandler(Context context) {
-        context.json("sample text");
+    private void registerHandler(Context context) {
+        // User registration logic
+        Account account = context.bodyAsClass(Account.class);
+        if (account.getUsername().isBlank() || account.getPassword().length() < 4) {
+            context.status(400).result("");
+            return;
+        }
+
+        if (AccountService.isUsernameTaken(account.getUsername())) {
+            context.status(400).result("");
+            return;
+        }
+
+        Account createdAccount = AccountService.registerAccount(account);
+        context.status(200).json(createdAccount);
+    }
+
+    private void loginHandler(Context context) {
+        Account credentials = context.bodyAsClass(Account.class);
+        Account authenticatedAccount = AccountService.authenticate(credentials.getUsername(), credentials.getPassword());
+
+        if (authenticatedAccount != null) {
+            context.status(200).json(authenticatedAccount);
+        } else {
+            context.status(401).result("");
+        }
+    }
+
+    private void createMessageHandler(Context context) {
+        // Create message logic
+        Message message = context.bodyAsClass(Message.class);
+        if (message.getMessage_text().isBlank() || message.getMessage_text().length() > 255 ||
+            !AccountService.isAccountExists(message.getPosted_by())) {
+            context.status(400).result("");
+            return;
+        }
+
+        Message createdMessage = MessageService.createMessage(message);
+        context.status(200).json(createdMessage);
+    }
+
+    private void getAllMessagesHandler(Context context) {
+        // Retrieve all messages logic
+        List<Message> messages = MessageService.getAllMessages();
+        context.status(200).json(messages);
+    }
+
+    private void getMessageByIdHandler(Context context) {
+        // Retrieve message by ID logic
+        int id = Integer.parseInt(context.pathParam("id"));
+        Message message = MessageService.getMessageById(id);
+
+        if (message != null) {
+            context.status(200).json(message);
+        } else {
+            context.status(200).result("");
+        }
+    }
+
+    private void updateMessageHandler(Context context) {
+        // Update message text logic
+        int id = Integer.parseInt(context.pathParam("id"));
+        Message existingMessage = MessageService.getMessageById(id);
+
+        if (existingMessage == null) {
+            context.status(400).result("");
+            return;
+        }
+
+        Message messageUpdate = context.bodyAsClass(Message.class);
+        if (messageUpdate.getMessage_text().isBlank() || messageUpdate.getMessage_text().length() > 255) {
+            context.status(400).result("");
+            return;
+        }
+
+        existingMessage.setMessage_text(messageUpdate.getMessage_text());
+        Message updatedMessage = MessageService.updateMessage(existingMessage);
+        context.status(200).json(updatedMessage);
+    }
+
+    private void deleteMessageHandler(Context context) {
+        // Delete message by ID logic
+        int id = Integer.parseInt(context.pathParam("id"));
+        Message deletedMessage = MessageService.deleteMessageById(id);
+
+        if (deletedMessage != null) {
+            context.status(200).json(deletedMessage);
+        } else {
+            context.status(200).result("");
+        }
+    }
+
+    private void getMessagesForUserHandler(Context context) {
+        // Retrieve all messages for a specific user logic
+        int userId = Integer.parseInt(context.pathParam("id"));
+        List<Message> messages = MessageService.getMessagesByAccountId(userId);
+        context.status(200).json(messages);
     }
 
 
