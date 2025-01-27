@@ -73,7 +73,7 @@ public class SocialMediaController {
             return;
         }
 
-        Message createdMessage = MessageService.createMessage(message);
+        Message createdMessage = MessageService.createNewMessage(message);
         context.status(200).json(createdMessage);
     }
 
@@ -131,9 +131,9 @@ public class SocialMediaController {
     private void getMessagesForUserHandler(Context context) {
         // Retrieve all messages for a specific user logic
         int userId = Integer.parseInt(context.pathParam("id"));
-        List<Message> messages = MessageService.getMessagesByAccountId(userId);
+        List<Message> messages = MessageService.getMessageFromUserMessages(userId);
+        //getMessageById(userId);
+        //getMessagesByAccountId(userId);
         context.status(200).json(messages);
     }
-
-
 }
