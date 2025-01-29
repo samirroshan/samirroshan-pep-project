@@ -1,9 +1,6 @@
 package DAO;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 import Model.Message;
 import Util.ConnectionUtil;
 
@@ -52,9 +49,11 @@ public class MessageDAO {
             return null;
         }
 
-        public static List<Message> getMessageFromUserMessage(int accountId) {
+        public static List<Message> getMessageFromUserMessage(int accountId) 
+        {
             List<Message> messages   = new ArrayList<>();
-            try(Connection connection = ConnectionUtil.getConnection()){
+            try(Connection connection = ConnectionUtil.getConnection())
+            {
                 String sql = "SELECT * FROM message WHERE posted_by = ?";
 
                 PreparedStatement ps = connection.prepareStatement(sql);
@@ -76,21 +75,25 @@ public class MessageDAO {
             return messages;
         }
 
-        public static Message createNewMessage(Message message){
-            try(Connection conn = ConnectionUtil.getConnection()){
+        public static Message createNewMessage(Message message)
+        {
+            try(Connection c = ConnectionUtil.getConnection())
+            {
 
             
                 String sql = "INSERT INTO message (posted_by, message_text, time_posted_epoch) VALUES (?,?,?)";
-                PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+                PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
                 ps.setInt(1, message.getPosted_by());
                 ps.setString(2, message.getMessage_text());
                 ps.setLong(3, message.getTime_posted_epoch());
                 int affectedrows = ps.executeUpdate();
                 //ps.executeUpdate();
-                if (affectedrows > 0) {
+                if (affectedrows > 0) 
+                {
                     ResultSet resultSet = ps.getGeneratedKeys();
-                    if (resultSet.next()) {
+                    if (resultSet.next()) 
+                    {
                         int msgid = resultSet.getInt(1);
 
                         message.setMessage_id(msgid);
@@ -112,37 +115,44 @@ public class MessageDAO {
             return null;
         }
 
-        public static Message deleteMessageById(int id){
+        public static Message deleteMessageById(int id)
+        {
             Message message = getMessageById(id);
-            if (message == null){
+            if (message == null)
+            {
                 return null;
             }
         
-            try (Connection conn = ConnectionUtil.getConnection()){
+            try (Connection c = ConnectionUtil.getConnection())
+            {
                 String sql = "DELETE FROM message WHERE message_id = ?";
-                PreparedStatement ps = conn.prepareStatement(sql);
+                PreparedStatement ps = c.prepareStatement(sql);
 
                 ps.setInt(1, id);
                 ps.executeUpdate();
 
             }
-            catch(Exception e){
+            catch(Exception e)
+            {
                 e.printStackTrace();
             }
             return message;
         }
 
-        public static Message updateMessage(Message message){
-            try(Connection conn = ConnectionUtil.getConnection()){
+        public static Message updateMessage(Message message)
+        {
+            try(Connection c = ConnectionUtil.getConnection())
+            {
                 String sql = "UPDATE message SET message_text = ? WHERE message_id = ?";
-                PreparedStatement ps = conn.prepareStatement(sql);
+                PreparedStatement ps = c.prepareStatement(sql);
 
                 ps.setString(1, message.getMessage_text());
                 ps.setInt(2, message.getMessage_id());
                 ps.executeUpdate();
 
                 int r=ps.executeUpdate();
-                if(r > 0) {
+                if(r > 0) 
+                {
                     return getMessageById(message.getMessage_id());
                 }
             }catch(Exception e){

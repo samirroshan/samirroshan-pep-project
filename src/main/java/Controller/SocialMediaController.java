@@ -21,11 +21,9 @@ public class SocialMediaController {
      */
     public Javalin startAPI() {
         Javalin app = Javalin.create();
-        // User-related endpoints
+        
         app.post("/register", this::registerHandler);
         app.post("/login", this::loginHandler);
-
-        // Message-related endpoints
         app.post("/messages", this::createMessageHandler);
         app.get("/messages", this::getAllMessagesHandler);
         app.get("/messages/{id}", this::getMessageByIdHandler);
@@ -37,14 +35,15 @@ public class SocialMediaController {
     }
 
     private void registerHandler(Context context) {
-        // User registration logic
         Account account = context.bodyAsClass(Account.class);
-        if (account.getUsername().isBlank() || account.getPassword().length() < 4) {
+        if (account.getUsername().isBlank() || account.getPassword().length() < 4)
+        {
             context.status(400).result("");
             return;
         }
 
-        if (AccountService.isUsernameTaken(account.getUsername())) {
+        if (AccountService.isUsernameTaken(account.getUsername())) 
+        {
             context.status(400).result("");
             return;
         }
@@ -65,7 +64,6 @@ public class SocialMediaController {
     }
 
     private void createMessageHandler(Context context) {
-        // Create message logic
         Message message = context.bodyAsClass(Message.class);
         if (message.getMessage_text().isBlank() || message.getMessage_text().length() > 255 ||
             !AccountService.isAccountExists(message.getPosted_by())) {
@@ -78,13 +76,11 @@ public class SocialMediaController {
     }
 
     private void getAllMessagesHandler(Context context) {
-        // Retrieve all messages logic
         List<Message> messages = MessageService.getAllMessages();
         context.status(200).json(messages);
     }
 
     private void getMessageByIdHandler(Context context) {
-        // Retrieve message by ID logic
         int id = Integer.parseInt(context.pathParam("id"));
         Message message = MessageService.getMessageById(id);
 
@@ -96,7 +92,6 @@ public class SocialMediaController {
     }
 
     private void updateMessageHandler(Context context) {
-        // Update message text logic
         int id = Integer.parseInt(context.pathParam("id"));
         Message existingMessage = MessageService.getMessageById(id);
 
@@ -117,7 +112,6 @@ public class SocialMediaController {
     }
 
     private void deleteMessageHandler(Context context) {
-        // Delete message by ID logic
         int id = Integer.parseInt(context.pathParam("id"));
         Message deletedMessage = MessageService.deleteMessageById(id);
 
@@ -129,7 +123,6 @@ public class SocialMediaController {
     }
 
     private void getMessagesForUserHandler(Context context) {
-        // Retrieve all messages for a specific user logic
         int userId = Integer.parseInt(context.pathParam("id"));
         List<Message> messages = MessageService.getMessageFromUserMessages(userId);
         //getMessageById(userId);
